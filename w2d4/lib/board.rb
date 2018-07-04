@@ -1,9 +1,8 @@
 class Board
-  attr_accessor :players, :victor
-  attr_reader :winner,:grid
+
+  attr_accessor :grid, :victor
 
   def initialize(grid=default_grid)
-    # Create grid on board
     @grid = grid
     @victor = nil
   end
@@ -12,84 +11,88 @@ class Board
     Array.new(3) { Array.new(3) }
   end
 
-  def get_cell(pos)
-    @grid[pos[0]][pos[1]]
-  end
-
-  def place_mark(pos,mark)
+  def place_mark(pos, mark)
     if empty?(pos)
-      @grid[pos[0]][pos[1]] = mark
+      grid[pos[0]][pos[1]] = mark
     else
-      puts "Cell not empty!"
+      puts "not empty"
     end
   end
 
   def empty?(pos)
-    get_cell(pos) == nil
+    get_square(pos) == nil
   end
 
-  def diagonals
-    [
-      [get_cell([0, 0]), get_cell([1, 1]), get_cell([2, 2])],
-      [get_cell([0, 2]), get_cell([1, 1]), get_cell([2, 0])]
-    ]
+  def get_square(pos)
+    grid[pos[0]][pos[1]]
   end
 
   def winner
     win_row?
-    win_col?
-    win_diag?
+    left_diagonal?
+    right_diagonal?
+    column?
     @victor
   end
 
   def win_row?
     @grid.each do |row|
-      if row.all? { |cell| cell == :X }
+      if row.all? { |el| el == :X }
         @victor = :X
-      elsif row.all? { |cell| cell == :O }
+      elsif row.all? { |el| el == :O }
         @victor = :O
       end
     end
   end
 
-  def win_col?
-    @grid.transpose.each do |col| # transpose method flips rows into columns that is arrays are now grouped as columns
-      if col.all? { |cell| cell == :X }
-        @victor = :X
-      elsif col.all? { |cell| cell == :O }
-        @victor = :O
-      end
+  def left_diagonal?
+    left_diagonal = [[0, 0], [1, 1], [2, 2]]
+    @victor = :X if left_diagonal.all? do |pos|
+
+      row, col = pos[0], pos[1]
+      @grid[row][col] == :X
+    end
+
+    @victor = :O if left_diagonal.all? do |pos|
+      row, col = pos[0], pos[1]
+      @grid[row][col] == :O
     end
   end
 
-  def win_diag?
-    diagonals.each do |row|
-      if row.all? { |cell| cell == :X }
-        @victor = :X
-      elsif row.all? { |cell| cell == :O }
-        @victor = :O
-      end
+  def right_diagonal?
+    right_diagonal = [[0, 2], [1, 1], [2, 0]]
+    @victor = :X if right_diagonal.all? do |pos|
+      row, column = pos[0], pos[1]
+      grid[row][column] == :X
+    end
+
+    @victor = :O if right_diagonal.all? do |pos|
+      row, column = pos[0], pos[1]
+      grid[row][column] == :O
     end
   end
 
-  def tied?
-    no_nil_cells = 0
-    @grid.each do |row|
-      no_nil_cells += 1 if !row.all?(&:nil?)
+  def column?
+    final_array = []
+    (0..2).each do |i|
+      new_array = []
+      (0..2).each do |j|
+        new_array << @grid[j][i]
+      end
+      final_array << new_array
     end
-    no_nil_cells == 3
+
+    final_array.each do |row|
+      if row.all? { |el| el == :X }
+        @victor = :X
+      elsif row.all? { |el| el == :O }
+        @victor = :O
+      end
+    end
   end
 
   def over?
-    (winner != nil) || tied?
-  end
-
-  def display
-    @grid.each do |row|
-      print "|"
-      row.each { |cell| print "  #{cell}  |" }
-      puts "\n-----------------"
-    end
+    grid.flatten.none? { |space| space == nil } ? true : winner
   end
 
 
